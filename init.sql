@@ -1,6 +1,7 @@
 DROP TABLE earth_observation_data;
 CREATE TABLE earth_observation_data(
 id serial NOT NULL,
+observed_at DATE,
 lat NUMERIC(6,3),
 lon NUMERIC(6,3),
 prc NUMERIC(6,3),
