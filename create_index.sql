@@ -1,0 +1,5 @@
+CREATE INDEX earth_observation_data_lat_index ON earth_observation_data(lat);
+CREATE INDEX earth_observation_data_lon_index ON earth_observation_data(lon);
+CREATE INDEX earth_observation_data_observed_at_year_index ON earth_observation_data(observed_at_year);
+CREATE INDEX earth_observation_data_observed_at_month_index ON earth_observation_data(observed_at_month);
+CREATE INDEX earth_observation_data_observed_at_day_index ON earth_observation_data(observed_at_day);
