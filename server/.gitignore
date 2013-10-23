@@ -1,0 +1,6 @@
+/target
+/work
+.settings
+.tomcatplugin
+.#webclasspath
+*.ini
