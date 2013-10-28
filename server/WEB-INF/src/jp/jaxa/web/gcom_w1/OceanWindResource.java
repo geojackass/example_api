@@ -1,9 +1,10 @@
-package bz.epi.joa.gcom_w1;
+package jp.jaxa.web.gcom_w1;
 
 import static java.sql.DriverManager.getConnection;
 import static java.lang.String.format;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.*;
 import java.text.*;
 import java.util.*;
@@ -22,52 +23,62 @@ public class OceanWindResource {
   ServletContext context;
 
   /**
-   * Method handling HTTP GET requests. The returned object will be sent to the
-   * client as "text/plain" media type.
-   * 
-   * @return String that will be returned as a text/plain response.
+   * @param format
+   * @param latitude
+   * @param longitude
+   * @param dateStr
+   * @return
    */
   @GET
-  // @Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON,
-  // MediaType.APPLICATION_XML })
   @Produces(MediaType.TEXT_PLAIN)
   public String getIt(@DefaultValue("csv") @QueryParam("format") String format,
       @DefaultValue("0") @QueryParam("lat") float latitude,
       @DefaultValue("0") @QueryParam("lon") float longitude,
       @DefaultValue("2013-08-01") @QueryParam("date") String dateStr) {
+    int year = 0, month = 0, day = 0;
+
     try {
       Calendar calendar = Calendar.getInstance();
       calendar.setTime(DATE_FORMAT.parse(dateStr));
-      int year = calendar.get(Calendar.YEAR);
-      int month = calendar.get(Calendar.MONTH) + 1;
-      int day = calendar.get(Calendar.DATE);
+      year = calendar.get(Calendar.YEAR);
+      month = calendar.get(Calendar.MONTH) + 1;
+      day = calendar.get(Calendar.DATE);
+    } catch (ParseException e) {
+      return getFormattedErrorMessage(
+          "Invalid Parameter: \"date\", You must specify \"yyyy-MM-dd\" for the parameter.",
+          format);
+    }
 
+    try {
       Connection con = loadConnection();
 
       PreparedStatement statement = con
-          .prepareStatement("SELECT ssw FROM earth_observation_data"
-              + " WHERE lat = ? AND lon = ?"
+          .prepareStatement("SELECT * FROM earth_observation_data"
+              + " WHERE lat = ?::numeric(7,3) AND lon = ?::numeric(7,3)"
               + " AND observed_at_year = ? AND observed_at_month = ? AND observed_at_day = ?");
-      statement.setFloat(1, latitude);
-      statement.setFloat(2, longitude);
+      statement.setObject(1, new BigDecimal(latitude));
+      statement.setObject(2, new BigDecimal(longitude));
       statement.setInt(3, year);
       statement.setInt(4, month);
       statement.setInt(5, day);
 
       ResultSet resultSet = statement.executeQuery();
       while (resultSet.next()) {
+        System.out.println(resultSet.getDouble("lat"));
         return Float.toString(resultSet.getFloat(1));
       }
     } catch (ClassNotFoundException e) {
       e.printStackTrace();
     } catch (SQLException e) {
       e.printStackTrace();
-    } catch (ParseException e) {
-      e.printStackTrace();
     } catch (IOException e) {
       e.printStackTrace();
     }
     return "error";
+  }
+
+  private String getFormattedErrorMessage(String message, String format) {
+    return message;
   }
 
   private Connection loadConnection() throws IOException,
