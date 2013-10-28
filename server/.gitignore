@@ -4,4 +4,6 @@
 .settings
 .tomcatplugin
 .#webclasspath
+.DS_Store
+Thumbs.db
 *.ini
