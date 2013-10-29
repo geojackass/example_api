@@ -64,7 +64,6 @@ public class OceanWindResource {
 
       ResultSet resultSet = statement.executeQuery();
       while (resultSet.next()) {
-        System.out.println(resultSet.getDouble("lat"));
         return Float.toString(resultSet.getFloat(1));
       }
     } catch (ClassNotFoundException e) {
