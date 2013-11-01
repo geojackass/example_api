@@ -15,3 +15,9 @@ observed_at_month INTEGER,
 observed_at_day INTEGER,
 CONSTRAINT earth_observation_data_key PRIMARY KEY (id)
 );
+
+DROP TABLE tokens;
+CREATE TABLE tokens(
+token varchar(11),
+CONSTRAINT tokens_key PRIMARY KEY (token)
+);
