@@ -98,10 +98,8 @@ public class PrecipitationResource {
 			Connection con = loadConnection();
 
 			PreparedStatement statement = con
-					.prepareStatement("SELECT avg(prc) FROM earth_observation_data"
-							+ " WHERE lat >= ?::numeric(7,3) and lat < ?::numeric(7,3) "
-							+ "AND lon >= ?::numeric(7,3) and lon < ?::numeric(7,3)"
-							+ " AND observed_at = ?");
+					.prepareStatement("SELECT avg(prc) FROM gcom_w1_data"
+							+ " WHERE lat >= ? and lat < ? AND lon >= ? and lon < ? AND observed_at = ?");
 			statement.setFloat(1, (float) (latitude - 0.05));
 			statement.setFloat(2, (float) (latitude + 0.05));
 			statement.setFloat(3, (float) (longitude - 0.05));
@@ -122,7 +120,7 @@ public class PrecipitationResource {
 	}
 
 	/**
-	 * �?��されたト�?クンが正しいも�?かど�?��を判定す�?
+	 * �?��されたト�?クンが正しいも�?かど�?��を判定す�?
 	 * 
 	 * @param token
 	 * @return
@@ -204,7 +202,7 @@ public class PrecipitationResource {
 	}
 
 	/**
-	 * �??タベ�?スへの接続情報を設定ファイルから取得す�?
+	 * �??タベ�?スへの接続情報を設定ファイルから取得す�?
 	 * 
 	 * @return
 	 * @throws IOException

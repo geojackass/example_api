@@ -4,14 +4,25 @@ import static java.lang.String.format;
 import static java.sql.DriverManager.getConnection;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.*;
-import java.text.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Properties;
 
 import javax.servlet.ServletContext;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 @Path("ocean_temperature_all")
@@ -41,13 +52,15 @@ public class OceanTemperatureAllResource {
 					format);
 		}
 
-		int year = 0, month = 0, day = 0;
+		Date observedAt;
 		try {
 			Calendar calendar = Calendar.getInstance();
 			calendar.setTime(DATE_FORMAT.parse(dateStr));
-			year = calendar.get(Calendar.YEAR);
-			month = calendar.get(Calendar.MONTH) + 1;
-			day = calendar.get(Calendar.DATE);
+			calendar.set(Calendar.HOUR_OF_DAY, 0);
+			calendar.set(Calendar.MINUTE, 0);
+			calendar.set(Calendar.SECOND, 0);
+			calendar.set(Calendar.MILLISECOND, 0);
+			observedAt = new Date(calendar.getTimeInMillis());
 		} catch (ParseException e) {
 			return getFormattedError(
 					Response.status(406),
@@ -59,30 +72,27 @@ public class OceanTemperatureAllResource {
 			Connection con = loadConnection();
 
 			PreparedStatement statement = con
-					.prepareStatement("SELECT lat,lon,sst FROM earth_observation_data"
-							+ " WHERE lat::numeric(7,3) between ? and ? AND lon::numeric(7,3) between ? and ?"
-							+ " AND observed_at_year = ? AND observed_at_month = ? AND observed_at_day = ?");
-			float lowerlat = latitude-range;
-			float upperlat = latitude+range;
-			float lowerlon = longitude-range;
-			float upperlon = longitude+range;
+					.prepareStatement("SELECT lat,lon,sst FROM gcom_w1_data"
+							+ " WHERE lat between ? and ? AND lon between ? and ? AND observed_at = ?");
+			float lowerlat = latitude - range;
+			float upperlat = latitude + range;
+			float lowerlon = longitude - range;
+			float upperlon = longitude + range;
 
-			statement.setObject(1, new BigDecimal(lowerlat));
-			statement.setObject(2, new BigDecimal(upperlat));
-			statement.setObject(3, new BigDecimal(lowerlon));
-			statement.setObject(4, new BigDecimal(upperlon));
-			statement.setInt(5, year);
-			statement.setInt(6, month);
-			statement.setInt(7, day);
+			statement.setDouble(1, lowerlat);
+			statement.setDouble(2, upperlat);
+			statement.setDouble(3, lowerlon);
+			statement.setDouble(4, upperlon);
+			statement.setDate(5, observedAt);
 
-			String data_entity="";
+			String data_entity = "";
 			ResultSet resultSet = statement.executeQuery();
 			while (resultSet.next()) {
-				data_entity = format(
-						"%s"+ "%f,%f,%f,",data_entity,resultSet.getFloat(1),
-						resultSet.getFloat(2),resultSet.getFloat(3));
+				data_entity = format("%s" + "%f,%f,%f,", data_entity,
+						resultSet.getFloat(1), resultSet.getFloat(2),
+						resultSet.getFloat(3));
 			}
-			return getFormattedResponse(Response.ok(),data_entity, format);
+			return getFormattedResponse(Response.ok(), data_entity, format);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -93,7 +103,7 @@ public class OceanTemperatureAllResource {
 
 	/**
 	 * 指定されたトークンが正しいものかどうかを判定する
-	 *
+	 * 
 	 * @param token
 	 * @return
 	 */
@@ -124,21 +134,23 @@ public class OceanTemperatureAllResource {
 	 * @param format
 	 * @return
 	 */
-	private Response getFormattedResponse(ResponseBuilder builder,String data_entity, String format) {
+	private Response getFormattedResponse(ResponseBuilder builder,
+			String data_entity, String format) {
 		if ("xml".equalsIgnoreCase(format)) {
 			String entity = format(
 					"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-							+ "<response><result>ok</result><ocean_temperature>%s</ocean_temperature></response>",data_entity);
+							+ "<response><result>ok</result><ocean_temperature>%s</ocean_temperature></response>",
+					data_entity);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.TEXT_XML_TYPE);
 		} else if ("json".equalsIgnoreCase(format)) {
 			String entity = format(
-					"{\"result\": \"ok\", \"ocean_temperature\": %s}", data_entity);
+					"{\"result\": \"ok\", \"ocean_temperature\": %s}",
+					data_entity);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
 		} else {
-			String entity = format(
-					"%s", data_entity);
+			String entity = format("%s", data_entity);
 			builder = builder.entity(entity);
 		}
 		builder = builder.encoding("utf-8");
@@ -175,7 +187,7 @@ public class OceanTemperatureAllResource {
 
 	/**
 	 * データベースへの接続情報を設定ファイルから取得する
-	 *
+	 * 
 	 * @return
 	 * @throws IOException
 	 * @throws SQLException
