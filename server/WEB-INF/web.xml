@@ -3,16 +3,16 @@
      see implementation details http://jersey.java.net/nonav/documentation/latest/jax-rs.html -->
 <web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
     <servlet>
-        <servlet-name>GCOM-W1 API</servlet-name>
+        <servlet-name>JAXA OPEN API</servlet-name>
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>jersey.config.server.provider.packages</param-name>
-            <param-value>jp.jaxa.web.gcom_w1</param-value>
+            <param-value>jp.jaxa.web</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet-mapping>
-        <servlet-name>GCOM-W1 API</servlet-name>
-        <url-pattern>/gcom-w1/*</url-pattern>
+        <servlet-name>JAXA OPEN API</servlet-name>
+        <url-pattern>/samd/*</url-pattern>
     </servlet-mapping>
 </web-app>
