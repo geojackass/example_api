@@ -1,4 +1,4 @@
-package jp.jaxa.web.gcom_w1;
+package jp.jaxa.web;
 
 import static java.lang.String.format;
 import static java.sql.DriverManager.getConnection;

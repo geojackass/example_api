@@ -1,4 +1,4 @@
-package jp.jaxa.web.gcom_w1;
+package jp.jaxa.web;
 
 import static java.lang.String.format;
 import static java.sql.DriverManager.getConnection;
@@ -14,8 +14,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-@Path("ocean_temperature_avg")
-public class OceanTemperatureAvgResource {
+@Path("ocean_temperature_all")
+public class OceanTemperatureAllResource {
 	public static DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
 	@Context
@@ -59,7 +59,7 @@ public class OceanTemperatureAvgResource {
 			Connection con = loadConnection();
 
 			PreparedStatement statement = con
-					.prepareStatement("SELECT avg(sst) FROM earth_observation_data"
+					.prepareStatement("SELECT lat,lon,sst FROM earth_observation_data"
 							+ " WHERE lat::numeric(7,3) between ? and ? AND lon::numeric(7,3) between ? and ?"
 							+ " AND observed_at_year = ? AND observed_at_month = ? AND observed_at_day = ?");
 			float lowerlat = latitude-range;
@@ -75,11 +75,14 @@ public class OceanTemperatureAvgResource {
 			statement.setInt(6, month);
 			statement.setInt(7, day);
 
+			String data_entity="";
 			ResultSet resultSet = statement.executeQuery();
 			while (resultSet.next()) {
-				return getFormattedResponse(Response.ok(),
-						resultSet.getFloat(1), format);
+				data_entity = format(
+						"%s"+ "%f,%f,%f,",data_entity,resultSet.getFloat(1),
+						resultSet.getFloat(2),resultSet.getFloat(3));
 			}
+			return getFormattedResponse(Response.ok(),data_entity, format);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -121,22 +124,22 @@ public class OceanTemperatureAvgResource {
 	 * @param format
 	 * @return
 	 */
-	private Response getFormattedResponse(ResponseBuilder builder,
-			float retval, String format) {
+	private Response getFormattedResponse(ResponseBuilder builder,String data_entity, String format) {
 		if ("xml".equalsIgnoreCase(format)) {
 			String entity = format(
 					"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-							+ "<response><result>ok</result><ocean_temperature>%f</ocean_temperature></response>",
-					retval);
+							+ "<response><result>ok</result><ocean_temperature>%s</ocean_temperature></response>",data_entity);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.TEXT_XML_TYPE);
 		} else if ("json".equalsIgnoreCase(format)) {
 			String entity = format(
-					"{\"result\": \"ok\", \"ocean_temperature\": %f}", retval);
+					"{\"result\": \"ok\", \"ocean_temperature\": %s}", data_entity);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
 		} else {
-			builder = builder.entity(retval);
+			String entity = format(
+					"%s", data_entity);
+			builder = builder.entity(entity);
 		}
 		builder = builder.encoding("utf-8");
 		return builder.build();
