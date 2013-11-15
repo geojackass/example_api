@@ -23,7 +23,6 @@ THE SOFTWARE.
 package jp.jaxa.web;
 
 import static java.lang.String.format;
-import static java.sql.DriverManager.getConnection;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -31,18 +30,13 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Properties;
 
-import javax.servlet.ServletContext;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -53,12 +47,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
  * 
  */
 @Path("prc")
-public class PrecipitationResource {
-	public static DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-
-	@Context
-	ServletContext context;
-
+public class PrecipitationResource extends ApiResource {
 	/**
 	 * @param token
 	 * @param format
@@ -120,33 +109,6 @@ public class PrecipitationResource {
 	}
 
 	/**
-	 * �?��されたト�?クンが正しいも�?かど�?��を判定す�?
-	 * 
-	 * @param token
-	 * @return
-	 */
-	private boolean isValidToken(String token) {
-		if (token == null) {
-			return false;
-		}
-
-		try {
-			Connection con = loadConnection();
-			PreparedStatement statement = con
-					.prepareStatement("SELECT EXISTS (SELECT token FROM tokens WHERE token = ?)");
-			statement.setString(1, token);
-
-			ResultSet resultSet = statement.executeQuery();
-			while (resultSet.next()) {
-				return resultSet.getBoolean(1);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
-
-	/**
 	 * @param builder
 	 * @param retval
 	 * @param format
@@ -199,31 +161,5 @@ public class PrecipitationResource {
 		}
 		builder = builder.encoding("utf-8");
 		return builder.build();
-	}
-
-	/**
-	 * �??タベ�?スへの接続情報を設定ファイルから取得す�?
-	 * 
-	 * @return
-	 * @throws IOException
-	 * @throws SQLException
-	 */
-	private Connection loadConnection() throws IOException, SQLException {
-		Properties prop = new Properties();
-		prop.load(context.getResourceAsStream("WEB-INF/conf/gcom_w1_db.ini"));
-
-		String host = prop.getProperty("hostname");
-		String port = prop.getProperty("port");
-		String db = prop.getProperty("database");
-		String user = prop.getProperty("user");
-		String password = prop.getProperty("password");
-
-		try {
-			Class.forName("org.postgresql.Driver");
-		} catch (ClassNotFoundException e) {
-		}
-
-		String url = format("jdbc:postgresql://%s:%s/%s", host, port, db);
-		return getConnection(url, user, password);
 	}
 }
