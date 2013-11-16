@@ -19,7 +19,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-@Path("ocean_temperature_avg")
+@Path("sstavg")
 public class OceanTemperatureAvgResource extends ApiResource {
 	/**
 	 * @param token
