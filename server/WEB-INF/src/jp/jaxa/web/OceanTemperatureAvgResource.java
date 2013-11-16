@@ -98,13 +98,13 @@ public class OceanTemperatureAvgResource extends ApiResource {
 		if ("xml".equalsIgnoreCase(format)) {
 			String entity = format(
 					"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-							+ "<response><result>ok</result><ocean_temperature>%f</ocean_temperature></response>",
+							+ "<response><result>ok</result><sst>%f</sst></response>",
 					retval);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.TEXT_XML_TYPE);
 		} else if ("json".equalsIgnoreCase(format)) {
 			String entity = format(
-					"{\"result\": \"ok\", \"ocean_temperature\": %f}", retval);
+					"{result:\"ok\",sst:%f}", retval);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
 		} else {

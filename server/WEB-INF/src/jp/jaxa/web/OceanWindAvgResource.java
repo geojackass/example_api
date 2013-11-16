@@ -93,13 +93,13 @@ public class OceanWindAvgResource extends ApiResource {
 		if ("xml".equalsIgnoreCase(format)) {
 			String entity = format(
 					"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-							+ "<response><result>ok</result><wind_velocity>%f</wind_velocity></response>",
+							+ "<response><result>ok</result><ssw>%f</ssw></response>",
 					retval);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.TEXT_XML_TYPE);
 		} else if ("json".equalsIgnoreCase(format)) {
 			String entity = format(
-					"{\"result\": \"ok\", \"wind_velocity\": %f}", retval);
+					"{result:\"ok\",ssw:%f}", retval);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
 		} else {
