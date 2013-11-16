@@ -13,6 +13,6 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>JAXA OPEN API</servlet-name>
-        <url-pattern>/samd/*</url-pattern>
+        <url-pattern>/*</url-pattern>
     </servlet-mapping>
 </web-app>
