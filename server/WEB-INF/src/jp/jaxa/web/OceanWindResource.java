@@ -19,8 +19,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-@Path("ssw")
-public class OceanWindResource extends ApiResource {
+@Path("sswavg")
+public class OceanWindAvgResource extends ApiResource {
 	/**
 	 * @param token
 	 * @param format
@@ -34,7 +34,8 @@ public class OceanWindResource extends ApiResource {
 			@DefaultValue("xml") @QueryParam("format") String format,
 			@DefaultValue("-19") @QueryParam("lat") float latitude,
 			@DefaultValue("24") @QueryParam("lon") float longitude,
-			@DefaultValue("2012-08-01") @QueryParam("date") String dateStr) {
+			@DefaultValue("2012-08-01") @QueryParam("date") String dateStr),
+			@DefaultValue("1") @QueryParam("range") float range)  {
 		if (isValidToken(token) == false) {
 			return getFormattedError(Response.status(401), "Invalid Token.",
 					format);
@@ -61,11 +62,11 @@ public class OceanWindResource extends ApiResource {
 
 			PreparedStatement statement = con
 					.prepareStatement("SELECT avg(ssw) FROM gcom_w1_data"
-							+ " WHERE (lat BETWEEN ? AND ?) AND (lon BETWEEN ? AND ?) AND observed_at = ? AND ssw != -9999");
-			statement.setDouble(1, latitude - 0.05);
-			statement.setDouble(2, latitude + 0.05);
-			statement.setDouble(3, longitude - 0.05);
-			statement.setDouble(4, longitude + 0.05);
+							+ " WHERE lat between ? and ? AND lon between ? and ? AND observed_at = ?");
+			statement.setDouble(1, latitude - range);
+			statement.setDouble(2, latitude + range);
+			statement.setDouble(3, longitude - range);
+			statement.setDouble(4, longitude + range);
 			statement.setDate(5, observedAt);
 
 			ResultSet resultSet = statement.executeQuery();
