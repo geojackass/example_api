@@ -87,12 +87,12 @@ public class OceanWindAllResource extends ApiResource {
 				}
 			} else if ("json".equalsIgnoreCase(format)) {
 				if (resultSet.next()) {
-					data_entity = format("{lat:%f,lon:%f,ssw:%f}",
+					data_entity = format("{\"lat\":%f,\"lon\":%f,\"ssw\":%f}",
 							resultSet.getFloat(1), resultSet.getFloat(2),
 							resultSet.getFloat(3));
 					while (resultSet.next()) {
 						data_entity = format(
-								"%s" + ",{lat:%f,lon:%f,ssw:%f}",
+								"%s" + ",{\"lat\":%f,\"lon\":%f,\"ssw\":%f}",
 								data_entity, resultSet.getFloat(1),
 								resultSet.getFloat(2), resultSet.getFloat(3));
 					}
@@ -131,7 +131,7 @@ public class OceanWindAllResource extends ApiResource {
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.TEXT_XML_TYPE);
 		} else if ("json".equalsIgnoreCase(format)) {
-			String entity = format("{result:\"ok\",values:[%s]}", data_entity);
+			String entity = format("{\"result\":\"ok\",\"values\":[%s]}", data_entity);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
 		} else {
