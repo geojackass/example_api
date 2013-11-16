@@ -54,6 +54,8 @@ public class PrecipitationResource extends ApiResource {
 	 * @param latitude
 	 * @param longitude
 	 * @param dateStr
+	 * @param range
+	 * @param type
 	 * @return
 	 */
 	@GET
@@ -61,7 +63,9 @@ public class PrecipitationResource extends ApiResource {
 			@DefaultValue("xml") @QueryParam("format") String format,
 			@DefaultValue("-9999.0") @QueryParam("lat") float latitude,
 			@DefaultValue("-9999.0") @QueryParam("lon") float longitude,
-			@DefaultValue("-9999.0") @QueryParam("date") String dateStr) {
+			@DefaultValue("0.1") @QueryParam("range") float range,
+			@DefaultValue("error") @QueryParam("date") String dateStr,
+			@DefaultValue("ave") @QueryParam("type") String type) {
 		if (isValidToken(token) == false) {
 			return getFormattedError(Response.status(401), "Invalid Token.",
 					format);
@@ -88,11 +92,11 @@ public class PrecipitationResource extends ApiResource {
 
 			PreparedStatement statement = con
 					.prepareStatement("SELECT avg(prc) FROM gcom_w1_data"
-							+ " WHERE lat >= ? and lat < ? AND lon >= ? and lon < ? AND observed_at = ?");
-			statement.setFloat(1, (float) (latitude - 0.05));
-			statement.setFloat(2, (float) (latitude + 0.05));
-			statement.setFloat(3, (float) (longitude - 0.05));
-			statement.setFloat(4, (float) (longitude + 0.05));
+							+ " WHERE (lat BETWEEN ? AND ?) AND (lon BETWEEN ? AND ?) AND observed_at = ?");
+			statement.setFloat(1, (float) (latitude - range / 2));
+			statement.setFloat(2, (float) (latitude + range / 2));
+			statement.setFloat(3, (float) (longitude - range / 2));
+			statement.setFloat(4, (float) (longitude + range / 2));
 			statement.setDate(5, date);
 
 			ResultSet resultSet = statement.executeQuery();
