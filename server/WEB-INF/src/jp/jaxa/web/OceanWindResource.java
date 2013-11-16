@@ -19,7 +19,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-@Path("ocean_wind")
+@Path("ssw")
 public class OceanWindResource extends ApiResource {
 	/**
 	 * @param token
@@ -31,7 +31,7 @@ public class OceanWindResource extends ApiResource {
 	 */
 	@GET
 	public Response getIt(@QueryParam("token") String token,
-			@DefaultValue("csv") @QueryParam("format") String format,
+			@DefaultValue("xml") @QueryParam("format") String format,
 			@DefaultValue("-19") @QueryParam("lat") float latitude,
 			@DefaultValue("24") @QueryParam("lon") float longitude,
 			@DefaultValue("2012-08-01") @QueryParam("date") String dateStr) {
