@@ -89,7 +89,7 @@ public class PrecipitationAllResource extends ApiResource {
 			Connection con = loadConnection();
 
 			PreparedStatement statement = con
-					.prepareStatement("SELECT lat,lon,sst FROM gcom_w1_data"
+					.prepareStatement("SELECT lat,lon,prc FROM gcom_w1_data"
 							+ " WHERE lat between ? and ? AND lon between ? and ? AND observed_at = ?");
 			float lowerlat = latitude - range;
 			float upperlat = latitude + range;
@@ -109,18 +109,18 @@ public class PrecipitationAllResource extends ApiResource {
 				while (resultSet.next()) {
 					data_entity = format(
 							"%s"
-									+ "<value><lat>%f</lat><lon>%f</lon><sst>%f</sst></value>",
+									+ "<value><lat>%f</lat><lon>%f</lon><prc>%f</prc></value>",
 							data_entity, resultSet.getFloat(1),
 							resultSet.getFloat(2), resultSet.getFloat(3));
 				}
 			} else if ("json".equalsIgnoreCase(format)) {
 				if (resultSet.next()) {
-					data_entity = format("{\"lat\":%f,\"lon\":%f,\"sst\":%f}",
+					data_entity = format("{\"lat\":%f,\"lon\":%f,\"prc\":%f}",
 							resultSet.getFloat(1), resultSet.getFloat(2),
 							resultSet.getFloat(3));
 					while (resultSet.next()) {
 						data_entity = format("%s"
-								+ ",{\"lat\":%f,\"lon\":%f,\"sst\":%f}",
+								+ ",{\"lat\":%f,\"lon\":%f,\"prc\":%f}",
 								data_entity, resultSet.getFloat(1),
 								resultSet.getFloat(2), resultSet.getFloat(3));
 					}
