@@ -46,8 +46,8 @@ import javax.ws.rs.core.Response.ResponseBuilder;
  * @author Hiroaki Tateshita
  * 
  */
-@Path("prc")
-public class PrecipitationResource extends ApiResource {
+@Path("prcall")
+public class PrecipitationAllResource extends ApiResource {
 	/**
 	 * @param token
 	 * @param format
@@ -55,7 +55,6 @@ public class PrecipitationResource extends ApiResource {
 	 * @param longitude
 	 * @param dateStr
 	 * @param range
-	 * @param type
 	 * @return
 	 */
 	@GET
@@ -63,18 +62,22 @@ public class PrecipitationResource extends ApiResource {
 			@DefaultValue("xml") @QueryParam("format") String format,
 			@DefaultValue("-9999.0") @QueryParam("lat") float latitude,
 			@DefaultValue("-9999.0") @QueryParam("lon") float longitude,
-			@DefaultValue("0.1") @QueryParam("range") float range,
-			@DefaultValue("error") @QueryParam("date") String dateStr) {
+			@DefaultValue("-9999.0") @QueryParam("date") String dateStr,
+			@DefaultValue("0.1") @QueryParam("range") float range) {
 		if (isValidToken(token) == false) {
 			return getFormattedError(Response.status(401), "Invalid Token.",
 					format);
 		}
 
-		Date date = null;
+		Date observedAt;
 		try {
 			Calendar calendar = Calendar.getInstance();
 			calendar.setTime(DATE_FORMAT.parse(dateStr));
-			date = new Date(calendar.getTimeInMillis());
+			calendar.set(Calendar.HOUR_OF_DAY, 0);
+			calendar.set(Calendar.MINUTE, 0);
+			calendar.set(Calendar.SECOND, 0);
+			calendar.set(Calendar.MILLISECOND, 0);
+			observedAt = new Date(calendar.getTimeInMillis());
 		} catch (ParseException e) {
 			return getFormattedError(
 					Response.status(406),
@@ -86,19 +89,54 @@ public class PrecipitationResource extends ApiResource {
 			Connection con = loadConnection();
 
 			PreparedStatement statement = con
-					.prepareStatement("SELECT avg(prc) FROM gcom_w1_data"
-							+ " WHERE (lat BETWEEN ? AND ?) AND (lon BETWEEN ? AND ?) AND observed_at = ?");
-			statement.setFloat(1, (float) (latitude - range));
-			statement.setFloat(2, (float) (latitude + range));
-			statement.setFloat(3, (float) (longitude - range));
-			statement.setFloat(4, (float) (longitude + range));
-			statement.setDate(5, date);
+					.prepareStatement("SELECT lat,lon,sst FROM gcom_w1_data"
+							+ " WHERE lat between ? and ? AND lon between ? and ? AND observed_at = ?");
+			float lowerlat = latitude - range;
+			float upperlat = latitude + range;
+			float lowerlon = longitude - range;
+			float upperlon = longitude + range;
 
+			statement.setDouble(1, lowerlat);
+			statement.setDouble(2, upperlat);
+			statement.setDouble(3, lowerlon);
+			statement.setDouble(4, upperlon);
+			statement.setDate(5, observedAt);
+
+			String data_entity = "";
 			ResultSet resultSet = statement.executeQuery();
-			while (resultSet.next()) {
-				return getFormattedResponse(Response.ok(),
-						resultSet.getFloat(1), format);
+
+			if ("xml".equalsIgnoreCase(format)) {
+				while (resultSet.next()) {
+					data_entity = format(
+							"%s"
+									+ "<value><lat>%f</lat><lon>%f</lon><sst>%f</sst></value>",
+							data_entity, resultSet.getFloat(1),
+							resultSet.getFloat(2), resultSet.getFloat(3));
+				}
+			} else if ("json".equalsIgnoreCase(format)) {
+				if (resultSet.next()) {
+					data_entity = format("{\"lat\":%f,\"lon\":%f,\"sst\":%f}",
+							resultSet.getFloat(1), resultSet.getFloat(2),
+							resultSet.getFloat(3));
+					while (resultSet.next()) {
+						data_entity = format("%s"
+								+ ",{\"lat\":%f,\"lon\":%f,\"sst\":%f}",
+								data_entity, resultSet.getFloat(1),
+								resultSet.getFloat(2), resultSet.getFloat(3));
+					}
+				}
+			} else {
+				if (resultSet.next()) {
+					data_entity = format("%f,%f,%f", resultSet.getFloat(1),
+							resultSet.getFloat(2), resultSet.getFloat(3));
+					while (resultSet.next()) {
+						data_entity = format("%s,%f,%f,%f", data_entity,
+								resultSet.getFloat(1), resultSet.getFloat(2),
+								resultSet.getFloat(3));
+					}
+				}
 			}
+			return getFormattedResponse(Response.ok(), data_entity, format);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -114,21 +152,22 @@ public class PrecipitationResource extends ApiResource {
 	 * @return
 	 */
 	private Response getFormattedResponse(ResponseBuilder builder,
-			float retval, String format) {
+			String data_entity, String format) {
 		if ("xml".equalsIgnoreCase(format)) {
 			String entity = format(
 					"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-							+ "<response><result>ok</result><value>%f</value></response>",
-					retval);
+							+ "<response><result>ok</result><values>%s</values></response>",
+					data_entity);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.TEXT_XML_TYPE);
 		} else if ("json".equalsIgnoreCase(format)) {
-			String entity = format("{\"result\": \"ok\", \"value\": %f}",
-					retval);
+			String entity = format("{\"result\":\"ok\",\"values\":[%s]}",
+					data_entity);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
 		} else {
-			builder = builder.entity(retval);
+			String entity = format("%s", data_entity);
+			builder = builder.entity(entity);
 		}
 		builder = builder.encoding("utf-8");
 		return builder.build();
