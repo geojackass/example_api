@@ -61,7 +61,7 @@ public class OceanTemperatureAllResource extends ApiResource {
 			Connection con = loadConnection();
 
 			PreparedStatement statement = con
-					.prepareStatement("SELECT lat,lon,sst FROM gcom_w1_20120801_data"
+					.prepareStatement("SELECT lat,lon,sst FROM gcom_w1_data"
 							+ " WHERE lat between ? and ? AND lon between ? and ? AND observed_at = ?");
 			float lowerlat = latitude - range;
 			float upperlat = latitude + range;
@@ -91,8 +91,8 @@ public class OceanTemperatureAllResource extends ApiResource {
 							resultSet.getFloat(1), resultSet.getFloat(2),
 							resultSet.getFloat(3));
 					while (resultSet.next()) {
-						data_entity = format(
-								"%s" + ",{\"lat\":%f,\"lon\":%f,\"sst\":%f}",
+						data_entity = format("%s"
+								+ ",{\"lat\":%f,\"lon\":%f,\"sst\":%f}",
 								data_entity, resultSet.getFloat(1),
 								resultSet.getFloat(2), resultSet.getFloat(3));
 					}
@@ -126,12 +126,15 @@ public class OceanTemperatureAllResource extends ApiResource {
 	private Response getFormattedResponse(ResponseBuilder builder,
 			String data_entity, String format) {
 		if ("xml".equalsIgnoreCase(format)) {
-			String entity = format("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-					+ "<response><result>ok</result><values>%s</values></response>", data_entity);
+			String entity = format(
+					"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+							+ "<response><result>ok</result><values>%s</values></response>",
+					data_entity);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.TEXT_XML_TYPE);
 		} else if ("json".equalsIgnoreCase(format)) {
-			String entity = format("{\"result\":\"ok\",\"values\":[%s]}", data_entity);
+			String entity = format("{\"result\":\"ok\",\"values\":[%s]}",
+					data_entity);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
 		} else {

@@ -46,8 +46,8 @@ import javax.ws.rs.core.Response.ResponseBuilder;
  * @author Hiroaki Tateshita
  * 
  */
-@Path("prc")
-public class PrecipitationResource extends ApiResource {
+@Path("prcavg")
+public class PrecipitationAvgResource extends ApiResource {
 	/**
 	 * @param token
 	 * @param format
