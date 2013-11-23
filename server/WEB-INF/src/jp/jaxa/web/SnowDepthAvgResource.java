@@ -54,10 +54,10 @@ public class SnowDepthAvgResource extends ApiResource {
 	@GET
 	public Response getIt(@QueryParam("token") String token,
 			@DefaultValue("xml") @QueryParam("format") String format,
-			@DefaultValue("-83.65") @QueryParam("lat") float latitude,
-			@DefaultValue("143.05") @QueryParam("lon") float longitude,
-			@DefaultValue("2012-08-01") @QueryParam("date") String dateStr,
-			@DefaultValue("1") @QueryParam("range") float range) {
+			@DefaultValue("-9999") @QueryParam("lat") float latitude,
+			@DefaultValue("-9999") @QueryParam("lon") float longitude,
+			@DefaultValue("-9999") @QueryParam("date") String dateStr,
+			@DefaultValue("0.1") @QueryParam("range") float range) {
 		if (isValidToken(token) == false) {
 			return getFormattedError(Response.status(401), "Invalid Token.",
 					format);
@@ -118,15 +118,13 @@ public class SnowDepthAvgResource extends ApiResource {
 	private Response getFormattedResponse(ResponseBuilder builder,
 			float retval, String format) {
 		if ("xml".equalsIgnoreCase(format)) {
-			String entity = format(
-					"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-							+ "<response><result>ok</result><snd>%f</snd></response>",
+			String entity = format("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+					+ "<response><result>ok</result><snd>%f</snd></response>",
 					retval);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.TEXT_XML_TYPE);
 		} else if ("json".equalsIgnoreCase(format)) {
-			String entity = format(
-					"{result:\"ok\",snd:%f}", retval);
+			String entity = format("{result:\"ok\",snd:%f}", retval);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
 		} else {

@@ -64,7 +64,7 @@ public class PrecipitationAvgResource extends ApiResource {
 			@DefaultValue("-9999.0") @QueryParam("lat") float latitude,
 			@DefaultValue("-9999.0") @QueryParam("lon") float longitude,
 			@DefaultValue("0.1") @QueryParam("range") float range,
-			@DefaultValue("error") @QueryParam("date") String dateStr) {
+			@DefaultValue("-9999") @QueryParam("date") String dateStr) {
 		if (isValidToken(token) == false) {
 			return getFormattedError(Response.status(401), "Invalid Token.",
 					format);

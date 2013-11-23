@@ -1,3 +1,25 @@
+/*
+Copyright (c) 2013 jaxa
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+ */
+
 package jp.jaxa.web;
 
 import static java.lang.String.format;
@@ -32,10 +54,10 @@ public class OceanWindAllResource extends ApiResource {
 	@GET
 	public Response getIt(@QueryParam("token") String token,
 			@DefaultValue("xml") @QueryParam("format") String format,
-			@DefaultValue("-19") @QueryParam("lat") float latitude,
-			@DefaultValue("24") @QueryParam("lon") float longitude,
-			@DefaultValue("2012-08-01") @QueryParam("date") String dateStr,
-			@DefaultValue("1") @QueryParam("range") float range) {
+			@DefaultValue("-9999") @QueryParam("lat") float latitude,
+			@DefaultValue("-9999") @QueryParam("lon") float longitude,
+			@DefaultValue("-9999") @QueryParam("date") String dateStr,
+			@DefaultValue("0.1") @QueryParam("range") float range) {
 		if (isValidToken(token) == false) {
 			return getFormattedError(Response.status(401), "Invalid Token.",
 					format);
@@ -61,7 +83,7 @@ public class OceanWindAllResource extends ApiResource {
 			Connection con = loadConnection();
 
 			PreparedStatement statement = con
-					.prepareStatement("SELECT lat,lon,ssw FROM gcom_w1_20120801_data"
+					.prepareStatement("SELECT lat,lon,ssw FROM gcom_w1_data"
 							+ " WHERE lat between ? and ? AND lon between ? and ? AND observed_at = ?");
 			float lowerlat = latitude - range;
 			float upperlat = latitude + range;
@@ -91,8 +113,8 @@ public class OceanWindAllResource extends ApiResource {
 							resultSet.getFloat(1), resultSet.getFloat(2),
 							resultSet.getFloat(3));
 					while (resultSet.next()) {
-						data_entity = format(
-								"%s" + ",{\"lat\":%f,\"lon\":%f,\"ssw\":%f}",
+						data_entity = format("%s"
+								+ ",{\"lat\":%f,\"lon\":%f,\"ssw\":%f}",
 								data_entity, resultSet.getFloat(1),
 								resultSet.getFloat(2), resultSet.getFloat(3));
 					}
@@ -126,12 +148,15 @@ public class OceanWindAllResource extends ApiResource {
 	private Response getFormattedResponse(ResponseBuilder builder,
 			String data_entity, String format) {
 		if ("xml".equalsIgnoreCase(format)) {
-			String entity = format("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-					+ "<response><result>ok</result><values>%s</values></response>", data_entity);
+			String entity = format(
+					"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+							+ "<response><result>ok</result><values>%s</values></response>",
+					data_entity);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.TEXT_XML_TYPE);
 		} else if ("json".equalsIgnoreCase(format)) {
-			String entity = format("{\"result\":\"ok\",\"values\":[%s]}", data_entity);
+			String entity = format("{\"result\":\"ok\",\"values\":[%s]}",
+					data_entity);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
 		} else {

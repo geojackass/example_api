@@ -54,10 +54,10 @@ public class SnowDepthAllResource extends ApiResource {
 	@GET
 	public Response getIt(@QueryParam("token") String token,
 			@DefaultValue("xml") @QueryParam("format") String format,
-			@DefaultValue("-83.65") @QueryParam("lat") float latitude,
-			@DefaultValue("143.05") @QueryParam("lon") float longitude,
-			@DefaultValue("2012-08-01") @QueryParam("date") String dateStr,
-			@DefaultValue("1") @QueryParam("range") float range) {
+			@DefaultValue("-9999") @QueryParam("lat") float latitude,
+			@DefaultValue("-9999") @QueryParam("lon") float longitude,
+			@DefaultValue("-9999") @QueryParam("date") String dateStr,
+			@DefaultValue("0.1") @QueryParam("range") float range) {
 		if (isValidToken(token) == false) {
 			return getFormattedError(Response.status(401), "Invalid Token.",
 					format);

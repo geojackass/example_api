@@ -1,3 +1,25 @@
+/*
+Copyright (c) 2013 jaxa
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+ */
+
 package jp.jaxa.web;
 
 import static java.lang.String.format;
@@ -32,10 +54,10 @@ public class OceanWindAvgResource extends ApiResource {
 	@GET
 	public Response getIt(@QueryParam("token") String token,
 			@DefaultValue("xml") @QueryParam("format") String format,
-			@DefaultValue("-19") @QueryParam("lat") float latitude,
-			@DefaultValue("24") @QueryParam("lon") float longitude,
-			@DefaultValue("2012-08-01") @QueryParam("date") String dateStr,
-			@DefaultValue("1") @QueryParam("range") float range)  {
+			@DefaultValue("-9999") @QueryParam("lat") float latitude,
+			@DefaultValue("-9999") @QueryParam("lon") float longitude,
+			@DefaultValue("-9999") @QueryParam("date") String dateStr,
+			@DefaultValue("0.1") @QueryParam("range") float range) {
 		if (isValidToken(token) == false) {
 			return getFormattedError(Response.status(401), "Invalid Token.",
 					format);
@@ -91,15 +113,13 @@ public class OceanWindAvgResource extends ApiResource {
 	private Response getFormattedResponse(ResponseBuilder builder,
 			float retval, String format) {
 		if ("xml".equalsIgnoreCase(format)) {
-			String entity = format(
-					"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-							+ "<response><result>ok</result><ssw>%f</ssw></response>",
+			String entity = format("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+					+ "<response><result>ok</result><ssw>%f</ssw></response>",
 					retval);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.TEXT_XML_TYPE);
 		} else if ("json".equalsIgnoreCase(format)) {
-			String entity = format(
-					"{result:\"ok\",ssw:%f}", retval);
+			String entity = format("{result:\"ok\",ssw:%f}", retval);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
 		} else {
