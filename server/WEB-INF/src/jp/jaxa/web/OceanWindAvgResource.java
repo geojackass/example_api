@@ -57,10 +57,11 @@ public class OceanWindAvgResource extends ApiResource {
 			@DefaultValue("-9999") @QueryParam("lat") float latitude,
 			@DefaultValue("-9999") @QueryParam("lon") float longitude,
 			@DefaultValue("-9999") @QueryParam("date") String dateStr,
-			@DefaultValue("0.1") @QueryParam("range") float range) {
+			@DefaultValue("0.1") @QueryParam("range") float range,
+			@DefaultValue("callback") @QueryParam("callback") String callback) {
 		if (isValidToken(token) == false) {
 			return getFormattedError(Response.status(401), "Invalid Token.",
-					format);
+					format, callback);
 		}
 
 		Date observedAt;
@@ -76,7 +77,7 @@ public class OceanWindAvgResource extends ApiResource {
 			return getFormattedError(
 					Response.status(406),
 					"Invalid Parameter: \"date\", You must specify \"yyyy-MM-dd\" for the parameter.",
-					format);
+					format, callback);
 		}
 
 		try {
@@ -94,7 +95,7 @@ public class OceanWindAvgResource extends ApiResource {
 			ResultSet resultSet = statement.executeQuery();
 			while (resultSet.next()) {
 				return getFormattedResponse(Response.ok(),
-						resultSet.getFloat(1), format);
+						resultSet.getFloat(1), format, callback);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -108,10 +109,11 @@ public class OceanWindAvgResource extends ApiResource {
 	 * @param builder
 	 * @param retval
 	 * @param format
+	 * @param callback
 	 * @return
 	 */
 	private Response getFormattedResponse(ResponseBuilder builder,
-			float retval, String format) {
+			float retval, String format, String callback) {
 		if ("xml".equalsIgnoreCase(format)) {
 			String entity = format("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 					+ "<response><result>ok</result><ssw>%f</ssw></response>",
@@ -122,6 +124,11 @@ public class OceanWindAvgResource extends ApiResource {
 			String entity = format("{result:\"ok\",ssw:%f}", retval);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
+		} else if ("jsonp".equalsIgnoreCase(format)) {
+			String entity = format("%s({result:\"ok\",ssw:%f})", callback,
+					retval);
+			builder = builder.entity(entity);
+			builder = builder.type("application/javascript");
 		} else {
 			builder = builder.entity(retval);
 		}
@@ -133,10 +140,11 @@ public class OceanWindAvgResource extends ApiResource {
 	 * @param builder
 	 * @param message
 	 * @param format
+	 * @param callback
 	 * @return
 	 */
 	private Response getFormattedError(ResponseBuilder builder, String message,
-			String format) {
+			String format, String callback) {
 		if ("xml".equalsIgnoreCase(format)) {
 			String entity = format(
 					"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
@@ -150,6 +158,12 @@ public class OceanWindAvgResource extends ApiResource {
 					message.replaceAll("\"", "\\\""));
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
+		} else if ("jsonp".equalsIgnoreCase(format)) {
+			String entity = format(
+					"%s({\"result\": \"error\", \"message\": \"%s\"})",
+					callback, message.replaceAll("\"", "\\\""));
+			builder = builder.entity(entity);
+			builder = builder.type("application/javascript");
 		} else {
 			builder = builder.entity(message);
 		}
