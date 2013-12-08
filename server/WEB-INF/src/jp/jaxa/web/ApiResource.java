@@ -44,9 +44,13 @@ public class ApiResource {
 			statement.setString(1, token);
 
 			ResultSet resultSet = statement.executeQuery();
+			boolean retval = false;
 			while (resultSet.next()) {
-				return resultSet.getBoolean(1);
+				retval = resultSet.getBoolean(1);
 			}
+			con.close();
+
+			return retval;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

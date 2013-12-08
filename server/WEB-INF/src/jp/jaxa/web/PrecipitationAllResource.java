@@ -136,6 +136,9 @@ public class PrecipitationAllResource extends ApiResource {
 					}
 				}
 			}
+
+			con.close();
+
 			return getFormattedResponse(Response.ok(), data_entity, format);
 		} catch (SQLException e) {
 			e.printStackTrace();

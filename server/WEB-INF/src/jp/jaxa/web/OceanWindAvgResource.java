@@ -93,10 +93,15 @@ public class OceanWindAvgResource extends ApiResource {
 			statement.setDate(5, observedAt);
 
 			ResultSet resultSet = statement.executeQuery();
+			Response response = null;
 			while (resultSet.next()) {
-				return getFormattedResponse(Response.ok(),
+				response = getFormattedResponse(Response.ok(),
 						resultSet.getFloat(1), format, callback);
 			}
+
+			con.close();
+
+			return response;
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
