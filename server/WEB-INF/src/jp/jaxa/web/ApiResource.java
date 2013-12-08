@@ -14,6 +14,9 @@ import java.util.Properties;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 
 /**
  * 各APIに共通な変数やメソッドを定義するクラス
@@ -81,5 +84,55 @@ public class ApiResource {
 
 		String url = format("jdbc:postgresql://%s:%s/%s", host, port, db);
 		return getConnection(url, user, password);
+	}
+
+	/**
+	 * @param builder
+	 * @param message
+	 * @param format
+	 * @return
+	 */
+	protected Response getFormattedError(ResponseBuilder builder,
+			String message, String format) {
+		if ("xml".equalsIgnoreCase(format)) {
+			String entity = format(
+					"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+							+ "<response><result>error</result><message>%s</message></response>",
+					message);
+			builder = builder.entity(entity);
+			builder = builder.type(MediaType.TEXT_XML_TYPE);
+		} else if ("json".equalsIgnoreCase(format)) {
+			String entity = format(
+					"{\"result\": \"error\", \"message\": \"%s\"}",
+					message.replaceAll("\"", "\\\""));
+			builder = builder.entity(entity);
+			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
+		} else {
+			builder = builder.entity(message);
+		}
+		builder = builder.encoding("utf-8");
+		return builder.build();
+	}
+
+	/**
+	 * @param builder
+	 * @param message
+	 * @param format
+	 * @param callback
+	 * @return
+	 */
+	protected Response getFormattedError(ResponseBuilder builder,
+			String message, String format, String callback) {
+		if ("jsonp".equalsIgnoreCase(format)) {
+			String entity = format(
+					"%s({\"result\": \"error\", \"message\": \"%s\"})",
+					callback, message.replaceAll("\"", "\\\""));
+			builder = builder.entity(entity);
+			builder = builder.type("application/javascript");
+			builder = builder.encoding("utf-8");
+			return builder.build();
+		} else {
+			return getFormattedError(builder, message, format);
+		}
 	}
 }
