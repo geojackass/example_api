@@ -90,7 +90,8 @@ public class PrecipitationAllResource extends ApiResource {
 
 			PreparedStatement statement = con
 					.prepareStatement("SELECT lat,lon,prc FROM gcom_w1_data"
-							+ " WHERE lat between ? and ? AND lon between ? and ? AND observed_at = ?");
+							+ " WHERE lat between ? and ? AND lon between ? and ? AND observed_at = ?"
+							+ "AND prc > -9998");
 			float lowerlat = latitude - range;
 			float upperlat = latitude + range;
 			float lowerlon = longitude - range;
@@ -104,7 +105,7 @@ public class PrecipitationAllResource extends ApiResource {
 
 			String data_entity = "";
 			ResultSet resultSet = statement.executeQuery();
-
+			int rowCount = 0;
 			if ("xml".equalsIgnoreCase(format)) {
 				while (resultSet.next()) {
 					data_entity = format(
@@ -112,6 +113,7 @@ public class PrecipitationAllResource extends ApiResource {
 									+ "<value><lat>%f</lat><lon>%f</lon><prc>%f</prc></value>",
 							data_entity, resultSet.getFloat(1),
 							resultSet.getFloat(2), resultSet.getFloat(3));
+					rowCount++;
 				}
 			} else if ("json".equalsIgnoreCase(format)) {
 				if (resultSet.next()) {
@@ -123,6 +125,7 @@ public class PrecipitationAllResource extends ApiResource {
 								+ ",{\"lat\":%f,\"lon\":%f,\"prc\":%f}",
 								data_entity, resultSet.getFloat(1),
 								resultSet.getFloat(2), resultSet.getFloat(3));
+						rowCount++;
 					}
 				}
 			} else {
@@ -133,11 +136,17 @@ public class PrecipitationAllResource extends ApiResource {
 						data_entity = format("%s,%f,%f,%f", data_entity,
 								resultSet.getFloat(1), resultSet.getFloat(2),
 								resultSet.getFloat(3));
+						rowCount++;
 					}
 				}
 			}
 
 			con.close();
+
+			if (rowCount == 0) {
+				return getFormattedError(Response.status(406), NO_DATA_MESSAGE,
+						format);
+			}
 
 			return getFormattedResponse(Response.ok(), data_entity, format);
 		} catch (SQLException e) {

@@ -25,6 +25,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
  */
 public class ApiResource {
 	protected static DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+	static final String NO_DATA_MESSAGE = "The request was correct but no data was retrieved.";
 
 	@Context
 	ServletContext context;

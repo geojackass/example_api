@@ -86,8 +86,9 @@ public class PrecipitationAvgResource extends ApiResource {
 			Connection con = loadConnection();
 
 			PreparedStatement statement = con
-					.prepareStatement("SELECT avg(prc) FROM gcom_w1_data"
-							+ " WHERE (lat BETWEEN ? AND ?) AND (lon BETWEEN ? AND ?) AND observed_at = ?");
+					.prepareStatement("SELECT count(*), avg(prc) FROM gcom_w1_data"
+							+ " WHERE (lat BETWEEN ? AND ?) AND (lon BETWEEN ? AND ?) AND observed_at = ? "
+							+ "AND prc > -9998");
 			statement.setFloat(1, (float) (latitude - range));
 			statement.setFloat(2, (float) (latitude + range));
 			statement.setFloat(3, (float) (longitude - range));
@@ -97,8 +98,13 @@ public class PrecipitationAvgResource extends ApiResource {
 			ResultSet resultSet = statement.executeQuery();
 			Response response = null;
 			while (resultSet.next()) {
-				response = getFormattedResponse(Response.ok(),
-						resultSet.getFloat(1), format);
+				if (resultSet.getInt(1) > 0) {
+					response = getFormattedResponse(Response.ok(),
+							resultSet.getFloat(2), format);
+				} else {
+					response = getFormattedError(Response.status(406),
+							NO_DATA_MESSAGE, format);
+				}
 			}
 
 			con.close();
