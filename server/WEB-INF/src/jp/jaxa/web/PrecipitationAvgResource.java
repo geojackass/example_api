@@ -68,7 +68,7 @@ public class PrecipitationAvgResource extends ApiResource {
 			@DefaultValue("callback") @QueryParam("callback") String callback) {
 		if (isValidToken(token) == false) {
 			return getFormattedError(Response.status(401), "Invalid Token.",
-					format);
+					format, callback);
 		}
 
 		Date date = null;
@@ -80,7 +80,7 @@ public class PrecipitationAvgResource extends ApiResource {
 			return getFormattedError(
 					Response.status(406),
 					"Invalid Parameter: \"date\", You must specify \"yyyy-MM-dd\" for the parameter.",
-					format);
+					format, callback);
 		}
 
 		try {
@@ -143,7 +143,6 @@ public class PrecipitationAvgResource extends ApiResource {
 					retval);
 			builder = builder.entity(entity);
 			builder = builder.type("application/javascript");
-
 		} else {
 			builder = builder.entity(retval);
 		}

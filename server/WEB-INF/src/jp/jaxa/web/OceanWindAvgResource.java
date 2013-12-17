@@ -84,8 +84,9 @@ public class OceanWindAvgResource extends ApiResource {
 			Connection con = loadConnection();
 
 			PreparedStatement statement = con
-					.prepareStatement("SELECT avg(ssw) FROM gcom_w1_data"
-							+ " WHERE lat between ? and ? AND lon between ? and ? AND observed_at = ?");
+					.prepareStatement("SELECT count(*), avg(ssw) FROM gcom_w1_data"
+							+ " WHERE (lat BETWEEN ? AND ?) AND (lon BETWEEN ? AND ?) AND observed_at = ? "
+							+ "AND ssw > -9998");
 			statement.setDouble(1, latitude - range);
 			statement.setDouble(2, latitude + range);
 			statement.setDouble(3, longitude - range);
@@ -95,8 +96,13 @@ public class OceanWindAvgResource extends ApiResource {
 			ResultSet resultSet = statement.executeQuery();
 			Response response = null;
 			while (resultSet.next()) {
-				response = getFormattedResponse(Response.ok(),
-						resultSet.getFloat(1), format, callback);
+				if (resultSet.getInt(1) > 0) {
+					response = getFormattedResponse(Response.ok(),
+							resultSet.getFloat(2), format, callback);
+				} else {
+					response = getFormattedError(Response.status(406),
+							NO_DATA_MESSAGE, format, callback);
+				}
 			}
 
 			con.close();

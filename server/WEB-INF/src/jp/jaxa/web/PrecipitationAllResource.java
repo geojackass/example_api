@@ -67,7 +67,7 @@ public class PrecipitationAllResource extends ApiResource {
 			@DefaultValue("callback") @QueryParam("callback") String callback) {
 		if (isValidToken(token) == false) {
 			return getFormattedError(Response.status(401), "Invalid Token.",
-					format);
+					format, callback);
 		}
 
 		Date observedAt;

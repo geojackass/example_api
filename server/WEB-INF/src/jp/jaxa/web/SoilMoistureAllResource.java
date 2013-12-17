@@ -56,11 +56,12 @@ public class SoilMoistureAllResource extends ApiResource {
 			@DefaultValue("xml") @QueryParam("format") String format,
 			@DefaultValue("-9999") @QueryParam("lat") float latitude,
 			@DefaultValue("-9999") @QueryParam("lon") float longitude,
-			@DefaultValue("-9999") @QueryParam("date") String dateStr,
-			@DefaultValue("0.1") @QueryParam("range") float range) {
+			@DefaultValue("-9999.0") @QueryParam("date") String dateStr,
+			@DefaultValue("0.1") @QueryParam("range") float range,
+			@DefaultValue("callback") @QueryParam("callback") String callback) {
 		if (isValidToken(token) == false) {
 			return getFormattedError(Response.status(401), "Invalid Token.",
-					format);
+					format, callback);
 		}
 
 		Date observedAt;
@@ -76,7 +77,7 @@ public class SoilMoistureAllResource extends ApiResource {
 			return getFormattedError(
 					Response.status(406),
 					"Invalid Parameter: \"date\", You must specify \"yyyy-MM-dd\" for the parameter.",
-					format);
+					format, callback);
 		}
 
 		try {
@@ -84,7 +85,8 @@ public class SoilMoistureAllResource extends ApiResource {
 
 			PreparedStatement statement = con
 					.prepareStatement("SELECT lat,lon,smc FROM gcom_w1_data"
-							+ " WHERE lat between ? and ? AND lon between ? and ? AND observed_at = ?");
+							+ " WHERE lat between ? and ? AND lon between ? and ? AND observed_at = ?"
+							+ "AND smc > -9998");
 			float lowerlat = latitude - range;
 			float upperlat = latitude + range;
 			float lowerlon = longitude - range;
@@ -98,7 +100,7 @@ public class SoilMoistureAllResource extends ApiResource {
 
 			String data_entity = "";
 			ResultSet resultSet = statement.executeQuery();
-
+			int rowCount = 0;
 			if ("xml".equalsIgnoreCase(format)) {
 				while (resultSet.next()) {
 					data_entity = format(
@@ -106,8 +108,10 @@ public class SoilMoistureAllResource extends ApiResource {
 									+ "<value><lat>%f</lat><lon>%f</lon><smc>%f</smc></value>",
 							data_entity, resultSet.getFloat(1),
 							resultSet.getFloat(2), resultSet.getFloat(3));
+					rowCount++;
 				}
-			} else if ("json".equalsIgnoreCase(format)) {
+			} else if ("json".equalsIgnoreCase(format)
+					|| "jsonp".equalsIgnoreCase(format)) {
 				if (resultSet.next()) {
 					data_entity = format("{\"lat\":%f,\"lon\":%f,\"smc\":%f}",
 							resultSet.getFloat(1), resultSet.getFloat(2),
@@ -117,6 +121,7 @@ public class SoilMoistureAllResource extends ApiResource {
 								+ ",{\"lat\":%f,\"lon\":%f,\"smc\":%f}",
 								data_entity, resultSet.getFloat(1),
 								resultSet.getFloat(2), resultSet.getFloat(3));
+						rowCount++;
 					}
 				}
 			} else {
@@ -127,13 +132,20 @@ public class SoilMoistureAllResource extends ApiResource {
 						data_entity = format("%s,%f,%f,%f", data_entity,
 								resultSet.getFloat(1), resultSet.getFloat(2),
 								resultSet.getFloat(3));
+						rowCount++;
 					}
 				}
 			}
 
 			con.close();
 
-			return getFormattedResponse(Response.ok(), data_entity, format);
+			if (rowCount == 0) {
+				return getFormattedError(Response.status(406), NO_DATA_MESSAGE,
+						format, callback);
+			}
+
+			return getFormattedResponse(Response.ok(), data_entity, format,
+					callback);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -149,7 +161,7 @@ public class SoilMoistureAllResource extends ApiResource {
 	 * @return
 	 */
 	private Response getFormattedResponse(ResponseBuilder builder,
-			String data_entity, String format) {
+			String data_entity, String format, String callback) {
 		if ("xml".equalsIgnoreCase(format)) {
 			String entity = format(
 					"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
@@ -162,6 +174,11 @@ public class SoilMoistureAllResource extends ApiResource {
 					data_entity);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
+		} else if ("jsonp".equalsIgnoreCase(format)) {
+			String entity = format("%s({\"result\":\"ok\",\"values\":[%s]})",
+					callback, data_entity);
+			builder = builder.entity(entity);
+			builder = builder.type("application/javascript");
 		} else {
 			String entity = format("%s", data_entity);
 			builder = builder.entity(entity);
