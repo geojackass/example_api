@@ -63,7 +63,8 @@ public class PrecipitationAllResource extends ApiResource {
 			@DefaultValue("-9999.0") @QueryParam("lat") float latitude,
 			@DefaultValue("-9999.0") @QueryParam("lon") float longitude,
 			@DefaultValue("-9999.0") @QueryParam("date") String dateStr,
-			@DefaultValue("0.1") @QueryParam("range") float range) {
+			@DefaultValue("0.1") @QueryParam("range") float range,
+			@DefaultValue("callback") @QueryParam("callback") String callback) {
 		if (isValidToken(token) == false) {
 			return getFormattedError(Response.status(401), "Invalid Token.",
 					format);
@@ -82,7 +83,7 @@ public class PrecipitationAllResource extends ApiResource {
 			return getFormattedError(
 					Response.status(406),
 					"Invalid Parameter: \"date\", You must specify \"yyyy-MM-dd\" for the parameter.",
-					format);
+					format, callback);
 		}
 
 		try {
@@ -115,7 +116,8 @@ public class PrecipitationAllResource extends ApiResource {
 							resultSet.getFloat(2), resultSet.getFloat(3));
 					rowCount++;
 				}
-			} else if ("json".equalsIgnoreCase(format)) {
+			} else if ("json".equalsIgnoreCase(format)
+					|| "jsonp".equalsIgnoreCase(format)) {
 				if (resultSet.next()) {
 					data_entity = format("{\"lat\":%f,\"lon\":%f,\"prc\":%f}",
 							resultSet.getFloat(1), resultSet.getFloat(2),
@@ -145,10 +147,11 @@ public class PrecipitationAllResource extends ApiResource {
 
 			if (rowCount == 0) {
 				return getFormattedError(Response.status(406), NO_DATA_MESSAGE,
-						format);
+						format, callback);
 			}
 
-			return getFormattedResponse(Response.ok(), data_entity, format);
+			return getFormattedResponse(Response.ok(), data_entity, format,
+					callback);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -164,7 +167,7 @@ public class PrecipitationAllResource extends ApiResource {
 	 * @return
 	 */
 	private Response getFormattedResponse(ResponseBuilder builder,
-			String data_entity, String format) {
+			String data_entity, String format, String callback) {
 		if ("xml".equalsIgnoreCase(format)) {
 			String entity = format(
 					"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
@@ -177,6 +180,11 @@ public class PrecipitationAllResource extends ApiResource {
 					data_entity);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
+		} else if ("jsonp".equalsIgnoreCase(format)) {
+			String entity = format("%s({\"result\":\"ok\",\"values\":[%s]})",
+					callback, data_entity);
+			builder = builder.entity(entity);
+			builder = builder.type("application/javascript");
 		} else {
 			String entity = format("%s", data_entity);
 			builder = builder.entity(entity);

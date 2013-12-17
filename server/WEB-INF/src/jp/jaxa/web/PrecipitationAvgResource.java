@@ -55,7 +55,7 @@ public class PrecipitationAvgResource extends ApiResource {
 	 * @param longitude
 	 * @param dateStr
 	 * @param range
-	 * @param type
+	 * @param callback
 	 * @return
 	 */
 	@GET
@@ -64,7 +64,8 @@ public class PrecipitationAvgResource extends ApiResource {
 			@DefaultValue("-9999.0") @QueryParam("lat") float latitude,
 			@DefaultValue("-9999.0") @QueryParam("lon") float longitude,
 			@DefaultValue("0.1") @QueryParam("range") float range,
-			@DefaultValue("-9999") @QueryParam("date") String dateStr) {
+			@DefaultValue("-9999") @QueryParam("date") String dateStr,
+			@DefaultValue("callback") @QueryParam("callback") String callback) {
 		if (isValidToken(token) == false) {
 			return getFormattedError(Response.status(401), "Invalid Token.",
 					format);
@@ -100,10 +101,10 @@ public class PrecipitationAvgResource extends ApiResource {
 			while (resultSet.next()) {
 				if (resultSet.getInt(1) > 0) {
 					response = getFormattedResponse(Response.ok(),
-							resultSet.getFloat(2), format);
+							resultSet.getFloat(2), format, callback);
 				} else {
 					response = getFormattedError(Response.status(406),
-							NO_DATA_MESSAGE, format);
+							NO_DATA_MESSAGE, format, callback);
 				}
 			}
 
@@ -124,7 +125,7 @@ public class PrecipitationAvgResource extends ApiResource {
 	 * @return
 	 */
 	private Response getFormattedResponse(ResponseBuilder builder,
-			float retval, String format) {
+			float retval, String format, String callback) {
 		if ("xml".equalsIgnoreCase(format)) {
 			String entity = format(
 					"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
@@ -137,6 +138,12 @@ public class PrecipitationAvgResource extends ApiResource {
 					retval);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
+		} else if ("jsonp".equalsIgnoreCase(format)) {
+			String entity = format("%s({result:\"ok\",prc:%f})", callback,
+					retval);
+			builder = builder.entity(entity);
+			builder = builder.type("application/javascript");
+
 		} else {
 			builder = builder.entity(retval);
 		}
