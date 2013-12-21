@@ -30,6 +30,11 @@ public class ApiResource {
 	@Context
 	ServletContext context;
 
+	public ApiResource() {
+		// 日付文字列の解析を厳密に行う
+		DATE_FORMAT.setLenient(false);
+	}
+
 	/**
 	 * 指定されたトークンが正しいものかどうかを判定する
 	 * 

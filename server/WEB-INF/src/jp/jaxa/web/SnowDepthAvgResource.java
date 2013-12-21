@@ -74,10 +74,9 @@ public class SnowDepthAvgResource extends ApiResource {
 			calendar.set(Calendar.MILLISECOND, 0);
 			observedAt = new Date(calendar.getTimeInMillis());
 		} catch (ParseException e) {
-			return getFormattedError(
-					Response.status(406),
-					"Invalid Parameter: \"date\", You must specify \"yyyy-MM-dd\" for the parameter.",
-					format, callback);
+			return getFormattedError(Response.status(406),
+					"Invalid Parameter: \"date\", " + e.getLocalizedMessage()
+							+ ".", format, callback);
 		}
 
 		try {
