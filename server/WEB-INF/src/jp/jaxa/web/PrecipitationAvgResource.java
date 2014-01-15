@@ -126,20 +126,18 @@ public class PrecipitationAvgResource extends ApiResource {
 	private Response getFormattedResponse(ResponseBuilder builder,
 			float retval, String format, String callback) {
 		if ("xml".equalsIgnoreCase(format)) {
-			String entity = format(
-					"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-							+ "<response><result>ok</result><value>%f</value></response>",
+			String entity = format("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+					+ "<response><result>ok</result><prc>%f</prc></response>",
 					retval);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.TEXT_XML_TYPE);
 		} else if ("json".equalsIgnoreCase(format)) {
-			String entity = format("{\"result\": \"ok\", \"value\": %f}",
-					retval);
+			String entity = format("{\"result\": \"ok\", \"prc\": %f}", retval);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
 		} else if ("jsonp".equalsIgnoreCase(format)) {
-			String entity = format("%s({result:\"ok\",prc:%f})", callback,
-					retval);
+			String entity = format("%s({\"result\":\"ok\",\"prc\":%f})",
+					callback, retval);
 			builder = builder.entity(entity);
 			builder = builder.type("application/javascript");
 		} else {

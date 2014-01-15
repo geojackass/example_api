@@ -135,12 +135,12 @@ public class SoilMoistureAvgResource extends ApiResource {
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.TEXT_XML_TYPE);
 		} else if ("json".equalsIgnoreCase(format)) {
-			String entity = format("{result:\"ok\",smc:%f}", retval);
+			String entity = format("{\"result\":\"ok\",\"smc\":%f}", retval);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
 		} else if ("jsonp".equalsIgnoreCase(format)) {
-			String entity = format("%s({result:\"ok\",smc:%f})", callback,
-					retval);
+			String entity = format("%s({\"result\":\"ok\",\"smc\":%f})",
+					callback, retval);
 			builder = builder.entity(entity);
 			builder = builder.type("application/javascript");
 		} else {

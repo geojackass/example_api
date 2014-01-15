@@ -131,12 +131,12 @@ public class OceanWindAvgResource extends ApiResource {
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.TEXT_XML_TYPE);
 		} else if ("json".equalsIgnoreCase(format)) {
-			String entity = format("{result:\"ok\",ssw:%f}", retval);
+			String entity = format("{\"result\":\"ok\",\"ssw\":%f}", retval);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
 		} else if ("jsonp".equalsIgnoreCase(format)) {
-			String entity = format("%s({result:\"ok\",ssw:%f})", callback,
-					retval);
+			String entity = format("%s({\"result\":\"ok\",\"ssw\":%f})",
+					callback, retval);
 			builder = builder.entity(entity);
 			builder = builder.type("application/javascript");
 		} else {

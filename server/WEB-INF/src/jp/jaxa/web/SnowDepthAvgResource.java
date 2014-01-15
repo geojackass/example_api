@@ -135,12 +135,12 @@ public class SnowDepthAvgResource extends ApiResource {
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.TEXT_XML_TYPE);
 		} else if ("json".equalsIgnoreCase(format)) {
-			String entity = format("{result:\"ok\",snd:%f}", retval);
+			String entity = format("{\"result\":\"ok\",\"snd\":%f}", retval);
 			builder = builder.entity(entity);
 			builder = builder.type(MediaType.APPLICATION_JSON_TYPE);
 		} else if ("jsonp".equalsIgnoreCase(format)) {
-			String entity = format("%s({result:\"ok\",snd:%f})", callback,
-					retval);
+			String entity = format("%s({\"result\":\"ok\",\"snd\":%f})",
+					callback, retval);
 			builder = builder.entity(entity);
 			builder = builder.type("application/javascript");
 		} else {
